@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Button from '../common/Button';
-import { ArrowDownUp, Expand as ArrowsExpand, Circle, Columns, Filter, Grid, LayoutGrid, RefreshCw, Save, Search, Share2, ZoomIn, ZoomOut } from 'lucide-react';
+import { ArrowDownUp, Expand as ArrowsExpand, BotMessageSquare, Circle, Columns, Filter, Grid, LayoutGrid, MessageSquare, RefreshCw, Save, Search, Share2, ZoomIn, ZoomOut } from 'lucide-react';
 import { GraphFilterOptions, GraphLayoutOptions, NodeType, EdgeType } from '../../types/topology.types';
 import { NODE_TYPE_COLORS, EDGE_TYPE_COLORS } from '../../utils/constants';
 
@@ -15,6 +15,7 @@ interface GraphControlsProps {
   onResetView: () => void;
   onSaveLayout: () => void;
   onSearch: (query: string) => void;
+  onAIChat?: () => void;
 }
 
 const GraphControls: React.FC<GraphControlsProps> = ({
@@ -28,6 +29,7 @@ const GraphControls: React.FC<GraphControlsProps> = ({
   onResetView,
   onSaveLayout,
   onSearch,
+  onAIChat,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -119,6 +121,12 @@ const GraphControls: React.FC<GraphControlsProps> = ({
         </form>
         
         <div className="flex items-center space-x-2 overflow-x-auto pb-2 sm:pb-0">
+          <Button
+            variant="outline"
+            size="sm"
+            leftIcon={<BotMessageSquare size={14} />}
+            onClick={onAIChat}
+            aria-label="Center graph">AI Chat</Button>
           <Button
             variant="outline"
             size="sm"
