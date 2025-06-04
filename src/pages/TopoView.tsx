@@ -41,9 +41,9 @@ const TopoView: React.FC = () => {
     const config: NeovisConfig = {
       containerId: "viz",
       neo4j: {
-        serverUrl: "neo4j://192.168.1.109:7687",
-        serverUser: "neo4j",
-        serverPassword: "123123123",
+        serverUrl: import.meta.env.VITE_NEO4J_URI || "bolt://localhost:7687",
+        serverUser: import.meta.env.VITE_NEO4J_USER || "neo4j",
+        serverPassword: import.meta.env.VITE_NEO4J_PASSWORD || "neo4j",
       },
       visConfig: {
         nodes: {
