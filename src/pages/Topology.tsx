@@ -18,7 +18,6 @@ import {
   getRelatedNodes,
   searchNodes,
 } from "../services/neo4jService";
-import Chat from "../components/common/Chat";
 
 const Topology: React.FC = () => {
   const [graphData, setGraphData] = useState<GraphData>({
@@ -47,10 +46,6 @@ const Topology: React.FC = () => {
     status: [],
     nodeLabels: [],
   });
-
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const openChat = () => setIsChatOpen(true);
-  const closeChat = () => setIsChatOpen(false);
 
   useEffect(() => {
     fetchTopologyData();
@@ -226,13 +221,6 @@ const Topology: React.FC = () => {
           onResetView={() => console.log("Reset view")}
           onSaveLayout={() => console.log("Save layout")}
           onSearch={handleSearch}
-          onAIChat={openChat}
-        />
-
-        <Chat
-          isOpen={isChatOpen}
-          onClose={() => setIsChatOpen(false)}
-          onToggle={() => setIsChatOpen(false)} // or implement minimize logic
         />
 
         <div className="mt-6">
