@@ -18,6 +18,7 @@ build/
 
 # Ignore environment files
 .env.local
+.env
 
 # Ignore coverage reports
 coverage/
