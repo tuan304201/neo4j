@@ -3,47 +3,9 @@ import ChatInterface from "../components/chat/ChatInterface.tsx";
 import ChatHistory from "../components/chat/ChatHistory.tsx";
 import { Conversation, Message } from "../types/chat.types.ts";
 import { v4 as uuidv4 } from "uuid";
-import { GoogleGenAI } from "@google/genai";
-
-const genAi = new GoogleGenAI({ apiKey: "" });
 
 // Fake data
-const initialConversations: Conversation[] = [
-  {
-    id: uuidv4(),
-    title: "Hỏi về lỗi hệ thống",
-    messages: [
-      {
-        id: uuidv4(),
-        text: "Hệ thống của tôi đang gặp vấn đề gì?",
-        sender: "user",
-        timestamp: new Date(Date.now() - 1000 * 60 * 5),
-      },
-      {
-        id: uuidv4(),
-        text: "Không có vấn đề gì cả",
-        sender: "ai",
-        timestamp: new Date(Date.now() - 1000 * 60 * 4),
-      },
-    ],
-    lastActivity: new Date(Date.now() - 1000 * 60 * 4),
-  },
-  {
-    id: uuidv4(),
-    title: "Lỗi này là gì?",
-    messages: [
-      {
-        id: uuidv4(),
-        text: "Lõi của HOST này là gì?",
-        sender: "user",
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
-      },
-    ],
-    lastActivity: new Date(Date.now() - 1000 * 60 * 60 * 2),
-  },
-];
-
-// const initialConversations: Conversation[] = [];
+const initialConversations: Conversation[] = [];
 
 const ChatAi: React.FC = () => {
   const [allConversations, setAllConversations] =
@@ -93,10 +55,9 @@ const ChatAi: React.FC = () => {
       setIsAITyping(true);
 
       // const aiResponseText = `AI đã nhận được: "${text}". Đây là câu trả lời mẫu.`;
-      const aiResponseText = await genAi.models.generateContent({
-        model: "gemini-2.0-flash",
-        contents: text,
-      });
+      const aiResponseText = {
+        text: `AI đã nhận được tin nhắn. Đây là câu trả lời mẫu.`,
+      }
       const aiTypingMessage: Message = {
         id: uuidv4(), // ID tạm thời cho typing
         text: aiResponseText.text || "Không thể lấy câu trả lời từ AI.",
