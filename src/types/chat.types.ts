@@ -1,7 +1,8 @@
 export interface Message {
   id: string;
-  text: string;
-  sender: "user" | "ai";
+  content: string;
+  role: "user" | "model";
+  session_id: string | null;
   timestamp: Date;
 }
 

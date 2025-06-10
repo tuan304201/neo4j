@@ -8,7 +8,7 @@ interface MessageBubbleProps {
 }
 
 const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isTyping }) => {
-  const isUser = message.sender === "user";
+  const isUser = message.role === "user";
 
   return (
     <div className={`flex mb-3 ${isUser ? "justify-end" : "justify-start"}`}>
@@ -17,10 +17,10 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isTyping }) => {
           isUser ? "bg-blue-500 text-white rounded-br-none" : "bg-gray-200 text-gray-800 rounded-bl-none"
         }`}
       >
-        {isTyping && message.sender === "ai" ? (
-          <TypingEffect text={message.text} />
+        {isTyping && message.role === "model" ? (
+          <TypingEffect text={message.content} />
         ) : (
-          <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
         )}
         <span className={`text-xs mt-1 block ${isUser ? "text-blue-200" : "text-gray-500"} text-right`}>
           {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}

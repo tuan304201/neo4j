@@ -99,8 +99,8 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({
                 <h3 className="font-medium text-gray-800 dark:text-gray-100 truncate text-sm">{conv.title}</h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                   {conv.messages.length > 0
-                    ? conv.messages[conv.messages.length - 1].text.substring(0, 30) +
-                      (conv.messages[conv.messages.length - 1].text.length > 30 ? "..." : "")
+                    ? conv.messages[conv.messages.length - 1].content.substring(0, 30) +
+                      (conv.messages[conv.messages.length - 1].content.length > 30 ? "..." : "")
                     : "Chưa có tin nhắn"}
                 </p>
               </div>

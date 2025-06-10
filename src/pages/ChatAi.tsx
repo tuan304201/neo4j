@@ -1,11 +1,73 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import ChatInterface from "../components/chat/ChatInterface.tsx";
 import ChatHistory from "../components/chat/ChatHistory.tsx";
-import { Conversation, Message } from "../types/chat.types.ts";
-import { v4 as uuidv4 } from "uuid";
+import {Conversation, Message} from "../types/chat.types.ts";
+import axios from "axios";
+import {v4 as uuidv4} from "uuid";
 
-// Fake data
-const initialConversations: Conversation[] = [];
+const baseUrl = import.meta.env.VITE_API_BASE_URL;
+
+let chatHistory = [];
+const allSessions = await axios.get(`${baseUrl}/api/sessions`);
+for (let session of allSessions.data) {
+  let sessionDetails = await axios.get(`${baseUrl}/api/history/${session}`);
+
+  let userMessage = sessionDetails.data[0];
+  let aiMessage = sessionDetails.data[1];
+
+  userMessage.timestamp = new Date(Date.now() - 1000 * 60 * 5);
+  aiMessage.timestamp = new Date(Date.now() - 1000 * 60 * 5);
+
+  const conversation = {
+    id: sessionDetails.data[1].session_id,
+    title: "new chat",
+    messages: [userMessage, aiMessage],
+    lastActivity: new Date(Date.now() - 1000 * 60 * 5),
+  };
+
+  chatHistory.push(conversation);
+}
+
+// Fake data;
+// const initialConversations: Conversation[] = [
+//   {
+//     id: uuidv4(),
+//     title: "Hỏi về lỗi hệ thống",
+//     messages: [
+//       {
+//         id: uuidv4(),
+//         content: "Hệ thống của tôi đang gặp vấn đề gì?",
+//         role: "user",
+//         session_id: "6fa2a434-b496-476f-b40c-a0cf1a9de19a",
+//         timestamp: new Date(Date.now() - 1000 * 60 * 5),
+//       },
+//       {
+//         id: uuidv4(),
+//         content: "Không có vấn đề gì cả",
+//         role: "model",
+//         session_id: "6fa2a434-b496-476f-b40c-a0cf1a9de19a",
+//         timestamp: new Date(Date.now() - 1000 * 60 * 4),
+//       },
+//     ],
+//     lastActivity: new Date(Date.now() - 1000 * 60 * 4),
+//   },
+//   {
+//     id: uuidv4(),
+//     title: "Lỗi này là gì?",
+//     messages: [
+//       {
+//         id: uuidv4(),
+//         content: "Lõi của HOST này là gì?",
+//         role: "user",
+//         session_id: null,
+//         timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
+//       },
+//     ],
+//     lastActivity: new Date(Date.now() - 1000 * 60 * 60 * 2),
+//   },
+// ];
+
+const initialConversations: Conversation[] = chatHistory || [];
 
 const ChatAi: React.FC = () => {
   const [allConversations, setAllConversations] =
@@ -23,11 +85,12 @@ const ChatAi: React.FC = () => {
     (conv) => conv.id === currentConversationId
   );
 
-  const handleSendMessage = async (text: string, conversationId: string) => {
+  const handleSendMessage = async (userMessage: string, conversationId: string) => {
     const newMessage: Message = {
       id: uuidv4(),
-      text,
-      sender: "user",
+      content: userMessage,
+      role: "user",
+      session_id: conversationId || null,
       timestamp: new Date(),
     };
 
@@ -54,20 +117,26 @@ const ChatAi: React.FC = () => {
       setIsAILoading(false);
       setIsAITyping(true);
 
-      // const aiResponseText = `AI đã nhận được: "${text}". Đây là câu trả lời mẫu.`;
-      const aiResponseText = {
-        text: `AI đã nhận được tin nhắn. Đây là câu trả lời mẫu.`,
-      }
+      const aiResponseResult = await axios.post(`${baseUrl}/api/chat`, {
+        message: userMessage,
+        session_id: conversationId || null,
+      });
+
+      // sessionId = aiResponseResult.data.session_id;
+
+      // const aiResponseText = `AI đã nhận được: "${userMessage}". Đây là câu trả lời mẫu.`;
+      const aiResponseText = aiResponseResult.data.ai_reply;
       const aiTypingMessage: Message = {
         id: uuidv4(), // ID tạm thời cho typing
-        text: aiResponseText.text || "Không thể lấy câu trả lời từ AI.",
-        sender: "ai",
+        content: aiResponseText || "Không thể lấy câu trả lời từ AI.",
+        role: "model",
+        session_id: conversationId || null,
         timestamp: new Date(),
       };
       setTypingMessage(aiTypingMessage);
 
       // Simulate typing duration based on text length
-      const typingDuration = aiResponseText.text != undefined ? aiResponseText.text.length * 50 + 500 : 0; // 50ms per char + 500ms base
+      const typingDuration = aiResponseText != undefined ? aiResponseText.length * 50 + 500 : 0; // 50ms per char + 500ms base
 
       setTimeout(() => {
         const aiFinalMessage: Message = {
@@ -120,7 +189,7 @@ const ChatAi: React.FC = () => {
             (conv) =>
               conv.title.toLowerCase().includes(lowerCaseTerm) ||
               conv.messages.some((msg) =>
-                msg.text.toLowerCase().includes(lowerCaseTerm)
+                  msg.content.toLowerCase().includes(lowerCaseTerm)
               )
           )
         );
@@ -129,28 +198,40 @@ const ChatAi: React.FC = () => {
     [allConversations]
   );
 
-  const handleDeleteConversation = (idToDelete: string) => {
-    setAllConversations((prev) =>
-      prev.filter((conv) => conv.id !== idToDelete)
-    );
-
-    // Nếu cuộc trò chuyện đang được chọn bị xóa
-    if (currentConversationId === idToDelete) {
-      // Tìm cuộc trò chuyện mới để chọn (ví dụ: cuộc trò chuyện đầu tiên còn lại)
-      const remainingConversations = allConversations.filter(
-        (conv) => conv.id !== idToDelete
+  const handleDeleteConversation = async (idToDelete: string) => {
+    try {
+      setAllConversations((prev) =>
+          prev.filter((conv) => conv.id !== idToDelete)
       );
-      if (remainingConversations.length > 0) {
-        // Sắp xếp lại theo lastActivity để chọn cuộc trò chuyện gần nhất
-        const sortedRemaining = [...remainingConversations].sort(
-          (a, b) => b.lastActivity.getTime() - a.lastActivity.getTime()
-        );
-        setCurrentConversationId(sortedRemaining[0].id);
-      } else {
-        setCurrentConversationId(null); // Không còn cuộc trò chuyện nào
+
+      if (currentConversationId === idToDelete) {
+        const deleteConversationResult = await axios.delete(`${baseUrl}/api/session/${idToDelete}`);
+
+        if (deleteConversationResult.status === 204) {
+          const remainingConversations = allConversations.filter(
+              (conv) => conv.id !== idToDelete
+          );
+
+          if (remainingConversations.length > 0) {
+            const sortedRemaining = [...remainingConversations].sort(
+                (a, b) => b.lastActivity.getTime() - a.lastActivity.getTime()
+            );
+            setCurrentConversationId(sortedRemaining[0].id);
+          } else {
+            setCurrentConversationId(null);
+          }
+        } else {
+          throw new Error('Failed to delete conversation');
+        }
       }
+    } catch (error) {
+      // Rollback the conversation deletion if API call fails
+      setAllConversations((prev) => {
+        const conversationToRestore = prev.find(conv => conv.id === idToDelete);
+        return conversationToRestore ? [...prev, conversationToRestore] : prev;
+      });
+      console.error('Error deleting conversation:', error);
     }
-    // Việc cập nhật filteredConversations sẽ được xử lý bởi useEffect theo dõi allConversations
   };
 
   // Update filteredConversations when allConversations changes
