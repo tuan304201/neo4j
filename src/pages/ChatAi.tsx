@@ -8,14 +8,13 @@ import {v4 as uuidv4} from "uuid";
 const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
 const chatHistory = [];
-const allSessions = await axios.get(`${baseUrl}/api/sessions`);
+const allSessions = await axios.get(`${baseUrl}/api/sessions/summary`);
 for (const session of allSessions.data) {
   const conversation = {
-    // id: session.session_id,
-    id: session,
+    id: session.session_id, // Fix: Use session_id instead of the entire session object
     title: session.title || "New chat",
     messages: [],
-    lastActivity: new Date(session.timestamp),
+    lastActivity: new Date(session.last_message_timestamp),
   };
 
   chatHistory.push(conversation);
@@ -60,6 +59,11 @@ for (const session of allSessions.data) {
 //   },
 // ];
 
+async function getSessionMessages(id: string) {
+  const currentSessionMessages = await axios.get(`${baseUrl}/api/history/${id}`);
+  return currentSessionMessages.data;
+}
+
 const initialConversations: Conversation[] = chatHistory || [];
 
 const ChatAi: React.FC = () => {
@@ -67,9 +71,12 @@ const ChatAi: React.FC = () => {
     useState<Conversation[]>(initialConversations);
   const [filteredConversations, setFilteredConversations] =
     useState<Conversation[]>(initialConversations);
+  // const [currentConversationId, setCurrentConversationId] = useState<
+  //   string | null
+  // >(initialConversations[0]?.id || null);
   const [currentConversationId, setCurrentConversationId] = useState<
-    string | null
-  >(initialConversations[0]?.id || null);
+      string | null
+  >(null);
   const [isAILoading, setIsAILoading] = useState(false);
   const [isAITyping, setIsAITyping] = useState(false);
   const [typingMessage, setTypingMessage] = useState<Message | null>(null); // Tin nhắn AI đang gõ
@@ -156,9 +163,32 @@ const ChatAi: React.FC = () => {
     }, 1000); // AI starts "thinking"
   };
 
-  const handleSelectConversation = (id: string) => {
-    console.log(id);
+  const handleSelectConversation = async (id: string) => {
     setCurrentConversationId(id);
+    setTypingMessage(null); // Clear the typing message when switching conversations
+    setIsAITyping(false); // Reset the typing state
+
+    try {
+      const currentSessionMessages = await getSessionMessages(id);
+      // Convert string timestamps to Date objects
+      const formattedMessages = currentSessionMessages.map((message: { timestamp: string | number | Date; }) => ({
+        ...message,
+        timestamp: new Date(message.timestamp)
+      }));
+
+      setAllConversations((prev) =>
+          prev.map((conv) => {
+            return conv.id === id
+                ? {
+                  ...conv,
+                  messages: formattedMessages,
+                  lastActivity: new Date()
+                } : conv;
+          })
+      );
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
   };
 
   const handleCreateNewChat = () => {
@@ -240,18 +270,20 @@ const ChatAi: React.FC = () => {
     // Nếu không còn conversation nào và currentConversationId vẫn có giá trị, set nó về null
     if (allConversations.length === 0 && currentConversationId !== null) {
       setCurrentConversationId(null);
-    } else if (allConversations.length > 0 && currentConversationId === null) {
-      // Nếu có conversation nhưng chưa chọn, chọn cái đầu tiên (hoặc mới nhất)
-      const sortedConversations = [...allConversations].sort(
-        (a, b) => b.lastActivity.getTime() - a.lastActivity.getTime()
-      );
-      if (
-        !currentConversationId ||
-        !allConversations.find((c) => c.id === currentConversationId)
-      ) {
-        setCurrentConversationId(sortedConversations[0].id);
-      }
-    } else if (
+    }
+    // else if (allConversations.length > 0 && currentConversationId === null) {
+    //   // Nếu có conversation nhưng chưa chọn, chọn cái đầu tiên (hoặc mới nhất)
+    //   const sortedConversations = [...allConversations].sort(
+    //     (a, b) => b.lastActivity.getTime() - a.lastActivity.getTime()
+    //   );
+    //   if (
+    //     !currentConversationId ||
+    //     !allConversations.find((c) => c.id === currentConversationId)
+    //   ) {
+    //     setCurrentConversationId(sortedConversations[0].id);
+    //   }
+    // }
+    else if (
       currentConversationId &&
       !allConversations.find((c) => c.id === currentConversationId)
     ) {
@@ -272,7 +304,7 @@ const ChatAi: React.FC = () => {
         {" "}
         {/* Main Content - Chat Interface */}
         <ChatInterface
-          currentConversation={null}
+            currentConversation={currentConversation || null}
           onSendMessage={handleSendMessage}
           isAILoading={isAILoading}
           isAITyping={isAITyping}
@@ -284,7 +316,7 @@ const ChatAi: React.FC = () => {
         {/* Sidebar - Chat History */}
         <ChatHistory
           conversations={filteredConversations}
-          currentConversationId={null}
+          currentConversationId={currentConversationId || null}
           onSelectConversation={handleSelectConversation}
           onCreateNewChat={handleCreateNewChat}
           onSearch={handleSearch}
