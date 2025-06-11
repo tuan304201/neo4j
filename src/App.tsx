@@ -3,7 +3,7 @@ import AlertManagement from "./pages/AlertManagement";
 import IncidentManagement from "./pages/IncidentManagement";
 import Topology from "./pages/Topology";
 import Layout from "./components/common/Layout";
-// import ChatAi from "./pages/ChatAi";
+import ChatAi from "./pages/ChatAi";
 
 function App() {
   return (
@@ -14,7 +14,7 @@ function App() {
           <Route path="alerts" element={<AlertManagement />} />
           <Route path="incidents" element={<IncidentManagement />} />
           <Route path="topology" element={<Topology />} />
-          {/* <Route path="chat" element={<ChatAi />} /> */}
+          <Route path="chat" element={<ChatAi />} />
         </Route>
       </Routes>
     </Router>
