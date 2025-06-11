@@ -11,7 +11,7 @@ const chatHistory = [];
 const allSessions = await axios.get(`${baseUrl}/api/sessions/summary`);
 for (const session of allSessions.data) {
   const conversation = {
-    id: session.session_id, // Fix: Use session_id instead of the entire session object
+    id: session.session_id,
     title: session.title || "New chat",
     messages: [],
     lastActivity: new Date(session.last_message_timestamp),
