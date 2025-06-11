@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
-import { AlertTriangle, Activity, Moon, Sun, Bot } from "lucide-react";
+import { AlertTriangle, Activity, Moon, Sun, Bot, Siren } from "lucide-react";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -36,6 +36,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             icon: <AlertTriangle size={20} />,
             label: "Alerts",
             path: "/alerts",
+          },
+          {
+            icon: <Siren size={20} />,
+            label: "Incidents",
+            path: "/incidents",
           },
           {
             icon: <Activity size={20} />,
