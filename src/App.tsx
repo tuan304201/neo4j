@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import AlertManagement from "./pages/AlertManagement";
+import IncidentManagement from "./pages/IncidentManagement";
 import Topology from "./pages/Topology";
 import Layout from "./components/common/Layout";
 import ChatAi from "./pages/ChatAi";
@@ -11,6 +12,7 @@ function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={<Navigate to="/alerts" replace />} />
           <Route path="alerts" element={<AlertManagement />} />
+          <Route path="incidents" element={<IncidentManagement />} />
           <Route path="topology" element={<Topology />} />
           <Route path="chat" element={<ChatAi />} />
         </Route>
