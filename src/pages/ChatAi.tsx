@@ -7,22 +7,15 @@ import {v4 as uuidv4} from "uuid";
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
-let chatHistory = [];
+const chatHistory = [];
 const allSessions = await axios.get(`${baseUrl}/api/sessions`);
-for (let session of allSessions.data) {
-  let sessionDetails = await axios.get(`${baseUrl}/api/history/${session}`);
-
-  let userMessage = sessionDetails.data[0];
-  let aiMessage = sessionDetails.data[1];
-
-  userMessage.timestamp = new Date(Date.now() - 1000 * 60 * 5);
-  aiMessage.timestamp = new Date(Date.now() - 1000 * 60 * 5);
-
+for (const session of allSessions.data) {
   const conversation = {
-    id: sessionDetails.data[1].session_id,
-    title: "new chat",
-    messages: [userMessage, aiMessage],
-    lastActivity: new Date(Date.now() - 1000 * 60 * 5),
+    // id: session.session_id,
+    id: session,
+    title: session.title || "New chat",
+    messages: [],
+    lastActivity: new Date(session.timestamp),
   };
 
   chatHistory.push(conversation);
@@ -164,6 +157,7 @@ const ChatAi: React.FC = () => {
   };
 
   const handleSelectConversation = (id: string) => {
+    console.log(id);
     setCurrentConversationId(id);
   };
 
@@ -278,7 +272,7 @@ const ChatAi: React.FC = () => {
         {" "}
         {/* Main Content - Chat Interface */}
         <ChatInterface
-          currentConversation={currentConversation || null}
+          currentConversation={null}
           onSendMessage={handleSendMessage}
           isAILoading={isAILoading}
           isAITyping={isAITyping}
@@ -290,7 +284,7 @@ const ChatAi: React.FC = () => {
         {/* Sidebar - Chat History */}
         <ChatHistory
           conversations={filteredConversations}
-          currentConversationId={currentConversationId}
+          currentConversationId={null}
           onSelectConversation={handleSelectConversation}
           onCreateNewChat={handleCreateNewChat}
           onSearch={handleSearch}

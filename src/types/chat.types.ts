@@ -12,3 +12,9 @@ export interface Conversation {
   messages: Message[];
   lastActivity: Date;
 }
+
+export interface SessionResponse {
+  session_id: string;
+  title: string;
+  timestamp: string;
+}
